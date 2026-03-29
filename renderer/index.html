@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' file:; script-src 'self'; style-src 'self' 'unsafe-inline'; media-src file: blob:; img-src 'self' file: data: blob:;" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clip Recorder</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Custom title bar -->
+  <div id="titlebar">
+    <div id="titlebar-drag">
+      <span id="titlebar-icon">&#9210;</span>
+      <span id="titlebar-title">Clip Recorder</span>
+    </div>
+    <div id="titlebar-controls">
+      <button class="titlebar-btn" id="btn-minimize" title="Minimize">&#8722;</button>
+      <button class="titlebar-btn" id="btn-maximize" title="Maximize">&#9633;</button>
+      <button class="titlebar-btn close" id="btn-close" title="Close">&#10005;</button>
+    </div>
+  </div>
+
+  <!-- Main layout -->
+  <div id="app">
+    <!-- Sidebar -->
+    <nav id="sidebar">
+      <div id="sidebar-logo">
+        <span class="logo-dot recording-dot" id="sidebar-rec-dot"></span>
+        <span>ClipRec</span>
+      </div>
+      <ul id="nav-list">
+        <li class="nav-item active" data-page="clips">
+          <span class="nav-icon">&#127916;</span>
+          <span>Clips</span>
+        </li>
+        <li class="nav-item" data-page="recording">
+          <span class="nav-icon">&#9654;</span>
+          <span>Recording</span>
+        </li>
+        <li class="nav-item" data-page="settings">
+          <span class="nav-icon">&#9881;</span>
+          <span>Settings</span>
+        </li>
+      </ul>
+      <div id="sidebar-status">
+        <div id="sidebar-status-dot" class="status-dot"></div>
+        <span id="sidebar-status-label">Stopped</span>
+      </div>
+    </nav>
+
+    <!-- Pages -->
+    <main id="content">
+
+      <!-- CLIPS PAGE -->
+      <section class="page active" id="page-clips">
+        <div class="page-header">
+          <h1>Clips</h1>
+          <button class="btn btn-secondary" id="btn-open-folder">&#128193; Open Folder</button>
+        </div>
+        <div id="clips-grid"></div>
+        <div id="clips-empty" class="empty-state hidden">
+          <div class="empty-icon">&#127909;</div>
+          <h2>No clips yet</h2>
+          <p>Start recording and press <kbd id="empty-hotkey">F9</kbd> to save a clip.</p>
+        </div>
+        <div id="clips-loading" class="loading-state hidden">
+          <div class="spinner"></div>
+          <p>Loading clips&hellip;</p>
+        </div>
+      </section>
+
+      <!-- RECORDING PAGE -->
+      <section class="page" id="page-recording">
+        <div class="page-header">
+          <h1>Recording</h1>
+        </div>
+        <div id="recording-center">
+          <div id="rec-toggle-wrap">
+            <button id="btn-rec-toggle" class="rec-toggle">
+              <span id="rec-toggle-icon">&#9654;</span>
+              <span id="rec-toggle-label">Start Recording</span>
+            </button>
+          </div>
+
+          <div id="rec-status-card" class="status-card">
+            <div class="status-row">
+              <span class="status-label">Status</span>
+              <span id="rec-status-value" class="status-value">Stopped</span>
+            </div>
+            <div class="status-row">
+              <span class="status-label">Buffer</span>
+              <div id="buffer-bar-wrap">
+                <div class="buffer-track"><div id="buffer-bar"></div></div>
+                <span id="buffer-label">0 / 0 segments</span>
+              </div>
+            </div>
+          </div>
+
+          <button id="btn-save-clip" class="btn btn-accent btn-large" disabled>
+            &#127384; Save Clip Now
+          </button>
+
+          <div id="rec-settings-preview" class="settings-preview">
+            <h3>Current Capture Settings</h3>
+            <div id="rec-preview-grid"></div>
+          </div>
+
+          <div id="rec-notification" class="rec-notification hidden"></div>
+        </div>
+      </section>
+
+      <!-- SETTINGS PAGE -->
+      <section class="page" id="page-settings">
+        <div class="page-header">
+          <h1>Settings</h1>
+          <button class="btn btn-accent" id="btn-save-settings">Save Settings</button>
+        </div>
+        <div id="settings-form">
+
+          <div class="settings-group">
+            <h2 class="settings-group-title">Clip</h2>
+
+            <div class="setting-row">
+              <label class="setting-label" for="s-clip-duration">
+                Clip Duration
+                <span class="setting-hint" id="clip-duration-hint">180s</span>
+              </label>
+              <input type="range" id="s-clip-duration" min="30" max="600" step="10" value="180" />
+            </div>
+
+            <div class="setting-row">
+              <label class="setting-label" for="s-hotkey">Clip Hotkey</label>
+              <div class="hotkey-wrap">
+                <input type="text" id="s-hotkey" class="input-text" readonly placeholder="Click to capture key" value="F9" />
+                <button class="btn btn-secondary btn-sm" id="btn-capture-hotkey">Press a key</button>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <label class="setting-label" for="s-output-dir">Output Directory</label>
+              <div class="dir-wrap">
+                <input type="text" id="s-output-dir" class="input-text" readonly />
+                <button class="btn btn-secondary btn-sm" id="btn-browse-dir">Browse&hellip;</button>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <label class="setting-label" for="s-notifications">Notifications</label>
+              <label class="toggle-switch">
+                <input type="checkbox" id="s-notifications" checked />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <h2 class="settings-group-title">Video</h2>
+
+            <div class="setting-row">
+              <label class="setting-label" for="s-fps">FPS</label>
+              <select id="s-fps" class="input-select">
+                <option value="15">15</option>
+                <option value="30" selected>30</option>
+                <option value="60">60</option>
+              </select>
+            </div>
+
+            <div class="setting-row">
+              <label class="setting-label" for="s-crf">
+                Video Quality (CRF)
+                <span class="setting-hint" id="crf-hint">23</span>
+              </label>
+              <input type="range" id="s-crf" min="15" max="35" step="1" value="23" />
+            </div>
+
+            <div class="setting-row">
+              <label class="setting-label" for="s-codec">Video Codec</label>
+              <select id="s-codec" class="input-select">
+                <option value="libx264" selected>libx264 (H.264)</option>
+                <option value="libx265">libx265 (H.265)</option>
+              </select>
+            </div>
+
+            <div class="setting-row">
+              <label class="setting-label" for="s-resolution">Resolution</label>
+              <select id="s-resolution" class="input-select">
+                <option value="auto" selected>Auto (screen size)</option>
+                <option value="1920x1080">1920&times;1080</option>
+                <option value="2560x1440">2560&times;1440</option>
+                <option value="3840x2160">3840&times;2160</option>
+              </select>
+            </div>
+
+            <div class="setting-row">
+              <label class="setting-label" for="s-video-format">Video Capture Format</label>
+              <input type="text" id="s-video-format" class="input-text" />
+            </div>
+
+            <div class="setting-row">
+              <label class="setting-label" for="s-video-device">Video Capture Device</label>
+              <input type="text" id="s-video-device" class="input-text" />
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <h2 class="settings-group-title">Audio</h2>
+
+            <div class="setting-row">
+              <label class="setting-label" for="s-capture-audio">Capture Audio</label>
+              <label class="toggle-switch">
+                <input type="checkbox" id="s-capture-audio" checked />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-row" id="row-audio-format">
+              <label class="setting-label" for="s-audio-format">Audio Capture Format</label>
+              <input type="text" id="s-audio-format" class="input-text" />
+            </div>
+
+            <div class="setting-row" id="row-audio-device">
+              <label class="setting-label" for="s-audio-device">Audio Capture Device</label>
+              <input type="text" id="s-audio-device" class="input-text" />
+            </div>
+          </div>
+
+        </div>
+        <div id="settings-toast" class="toast hidden"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- VIDEO PLAYER MODAL -->
+  <div id="player-overlay" class="hidden">
+    <div id="player-modal">
+      <div id="player-header">
+        <span id="player-filename"></span>
+        <button id="btn-player-close" class="btn-icon" title="Close">&#10005;</button>
+      </div>
+
+      <div id="player-video-wrap">
+        <video id="player-video" preload="metadata"></video>
+      </div>
+
+      <div id="player-controls">
+        <button id="btn-play-pause" class="btn-icon-lg">&#9654;</button>
+        <span id="player-time">0:00 / 0:00</span>
+      </div>
+
+      <!-- Trim timeline -->
+      <div id="trim-section">
+        <div id="trim-timeline-wrap">
+          <div id="trim-timeline">
+            <div id="trim-highlight"></div>
+            <div id="trim-handle-left" class="trim-handle" data-side="left"></div>
+            <div id="trim-handle-right" class="trim-handle" data-side="right"></div>
+            <div id="playhead"></div>
+          </div>
+          <div id="trim-labels">
+            <span>Start: <span id="trim-start-label">0s</span></span>
+            <span>End: <span id="trim-end-label">0s</span></span>
+            <span>Duration: <span id="trim-dur-label">0s</span></span>
+          </div>
+        </div>
+        <div id="trim-actions">
+          <button class="btn btn-secondary" id="btn-reset-trim">Reset Trim</button>
+          <button class="btn btn-accent" id="btn-save-trim">Save Trimmed Clip</button>
+        </div>
+        <div id="trim-status" class="hidden"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- DELETE CONFIRM MODAL -->
+  <div id="delete-overlay" class="hidden">
+    <div id="delete-modal">
+      <h2>Delete Clip?</h2>
+      <p id="delete-modal-name"></p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="btn-delete-cancel">Cancel</button>
+        <button class="btn btn-danger" id="btn-delete-confirm">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
