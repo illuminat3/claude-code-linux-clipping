@@ -44,7 +44,12 @@ function runFFmpeg(args) {
  */
 function buildConcatList(segments) {
   const listPath = path.join(os.tmpdir(), `concat_${Date.now()}.txt`);
-  const lines = segments.map(s => `file '${s.path.replace(/'/g, "'\\''")}'`).join('\n');
+  const lines = segments.map(s => {
+    // FFmpeg concat format: use forward slashes (works on all platforms) and
+    // escape single quotes with backslash per the concat demuxer spec.
+    const p = s.path.replace(/\\/g, '/').replace(/'/g, "\\'");
+    return `file '${p}'`;
+  }).join('\n');
   fs.writeFileSync(listPath, lines, 'utf8');
   return listPath;
 }

@@ -339,6 +339,49 @@ ipcMain.handle('config:set', (_event, key, value) => {
   return { ok: true };
 });
 
+// Device enumeration (Windows dshow)
+ipcMain.handle('devices:list', async () => {
+  if (process.platform !== 'win32') return { ok: true, audio: [], video: [] };
+
+  let ffmpegBin;
+  try {
+    const p = require('ffmpeg-static');
+    ffmpegBin = (p && require('fs').existsSync(p)) ? p : 'ffmpeg';
+  } catch (e) {
+    ffmpegBin = 'ffmpeg';
+  }
+
+  return new Promise((resolve) => {
+    const { spawn } = require('child_process');
+    const proc = spawn(ffmpegBin, ['-f', 'dshow', '-list_devices', 'true', '-i', 'dummy'], {
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    let output = '';
+    proc.stderr.on('data', d => { output += d.toString(); });
+    proc.stdout.on('data', d => { output += d.toString(); });
+
+    proc.on('close', () => {
+      const audio = [];
+      const video = [];
+      // FFmpeg lists dshow devices like: [dshow @ ...] "Device Name" (audio/video)
+      const lineRe = /^\[dshow[^\]]*\]\s+"([^"]+)"\s+\((audio|video)\)/;
+      for (const line of output.split('\n')) {
+        const m = line.match(lineRe);
+        if (m) {
+          if (m[2] === 'audio') audio.push(m[1]);
+          else if (m[2] === 'video') video.push(m[1]);
+        }
+      }
+      resolve({ ok: true, audio, video });
+    });
+
+    proc.on('error', (err) => {
+      resolve({ ok: false, error: err.message, audio: [], video: [] });
+    });
+  });
+});
+
 // Dialog
 ipcMain.handle('dialog:openDirectory', async () => {
   const result = await dialog.showOpenDialog(mainWindow, {

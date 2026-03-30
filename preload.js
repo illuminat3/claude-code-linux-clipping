@@ -27,6 +27,10 @@ contextBridge.exposeInMainWorld('api', {
     openDirectory: () => ipcRenderer.invoke('dialog:openDirectory'),
   },
 
+  devices: {
+    list: () => ipcRenderer.invoke('devices:list'),
+  },
+
   pathToFileUrl: (p) => url.pathToFileURL(p).href,
 
   platform: process.platform,

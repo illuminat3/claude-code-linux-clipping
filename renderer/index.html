@@ -222,7 +222,14 @@
 
             <div class="setting-row" id="row-audio-device">
               <label class="setting-label" for="s-audio-device">Audio Capture Device</label>
-              <input type="text" id="s-audio-device" class="input-text" />
+              <div class="dir-wrap">
+                <input type="text" id="s-audio-device" class="input-text" />
+                <button class="btn btn-secondary btn-sm hidden" id="btn-list-devices" title="List available dshow devices">List Devices</button>
+              </div>
+            </div>
+            <div class="setting-row hidden" id="row-device-list">
+              <label class="setting-label">Available Audio Devices</label>
+              <div id="device-list-output" class="device-list"></div>
             </div>
           </div>
 

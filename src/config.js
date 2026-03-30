@@ -14,7 +14,7 @@ const DEFAULT_CONFIG = {
   videoFormat: process.platform === 'win32' ? 'gdigrab' : 'x11grab',
   videoDevice: process.platform === 'win32' ? 'desktop' : (process.env.DISPLAY || ':0.0') + '+0,0',
   audioFormat: process.platform === 'win32' ? 'dshow' : 'pulse',
-  audioDevice: process.platform === 'win32' ? 'audio=Stereo Mix (Realtek High Definition Audio)' : 'default',
+  audioDevice: process.platform === 'win32' ? 'audio=Stereo Mix' : 'default',
   outputDir: path.join(os.homedir(), 'Videos', 'ClipRecorder'),
   hotkey: 'F9',
   notifications: true,

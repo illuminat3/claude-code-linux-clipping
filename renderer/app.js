@@ -591,6 +591,48 @@ function showSettingsToast(msg, type = 'success') {
   }, 3000);
 }
 
+// ── Windows device list ────────────────────────────────────────────────────────
+
+const btnListDevices   = document.getElementById('btn-list-devices');
+const rowDeviceList    = document.getElementById('row-device-list');
+const deviceListOutput = document.getElementById('device-list-output');
+
+// Show "List Devices" button only on Windows
+if (window.api.platform === 'win32') {
+  btnListDevices.classList.remove('hidden');
+}
+
+btnListDevices.addEventListener('click', async () => {
+  btnListDevices.disabled = true;
+  btnListDevices.textContent = 'Listing\u2026';
+  deviceListOutput.innerHTML = '';
+
+  const result = await window.api.devices.list();
+
+  btnListDevices.disabled = false;
+  btnListDevices.textContent = 'List Devices';
+
+  if (!result.ok || (result.audio.length === 0 && result.video.length === 0)) {
+    deviceListOutput.innerHTML = '<span class="device-none">No devices found. Ensure FFmpeg is installed.</span>';
+    rowDeviceList.classList.remove('hidden');
+    return;
+  }
+
+  const items = result.audio.map(name => {
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-secondary btn-sm device-item';
+    btn.textContent = `audio=${name}`;
+    btn.title = 'Click to use this device';
+    btn.addEventListener('click', () => {
+      sAudioDevice.value = `audio=${name}`;
+    });
+    return btn;
+  });
+
+  items.forEach(el => deviceListOutput.appendChild(el));
+  rowDeviceList.classList.remove('hidden');
+});
+
 // ── Init ───────────────────────────────────────────────────────────────────────
 
 async function init() {
